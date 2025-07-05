@@ -1,74 +1,110 @@
-// app/api/analyze/route.js
 import { NextResponse } from "next/server";
-import { extractTextFromFile } from "@/lib/parseResume";
-import formidable from "formidable";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { extractTextFromFile } from "@/lib/parseResume";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+import { GoogleGenAI } from "@google/genai";
 
-// Disable default body parser
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import { dbConnect } from "@/lib/dbConnect";
+import AnalysisResult from "@/models/AnalysisResult";
+
 
 export async function POST(req) {
   try {
-    const form = formidable({ multiples: false });
+    await dbConnect();
+    const formData = await req.formData();
+    const file = formData.get("resume");
+    const jobDescription = formData.get("job_description");
 
-    const [fields, files] = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve([fields, files]);
-      });
-    });
-
-    const file = files.resume?.[0];
-
-    if (!file || !file.filepath.endsWith(".pdf")) {
-      return NextResponse.json(
-        { error: "Please upload a valid PDF resume." },
-        { status: 400 }
-      );
+    if (!file || typeof file === "string") {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const resumeText = await extractTextFromFile(file.filepath);
-    console.log(resumeText)
+    if (!jobDescription || typeof jobDescription !== "string") {
+      return NextResponse.json({ error: "Job description is missing" }, { status: 400 });
+    }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    const prompt = `
-You are a resume analysis assistant. Analyze the following resume and return:
+    const tempDir = os.tmpdir();
+    const filePath = path.join(tempDir, file.name);
+    await fs.writeFile(filePath, buffer);
 
-- Matched Roles
-- Skills Found
-- Missing Keywords
-- Summary
-- Recommendations
+    const resumeText = await extractTextFromFile(filePath);
+
+    // const ai = new GoogleGenerativeAI({
+    //   apiKey: process.env.GEMINI_API_KEY,
+    // });
+
+    const ai = new GoogleGenAI({ apiKey:process.env.GEMINI_API_KEY})
+
+   const prompt = `
+You are an AI specialized in resume-job matching. Analyze the following resume and compare it with the given job description.
+
+Do not just match keywords—understand the resume contextually, identify relevant experience, skills, and alignment with the job role.
+
+Return ONLY valid JSON — no markdown, no triple backticks, no extra text.
+
+Keep the summary and recommendations concise, clear, and specific.
+
+Job Description:
+${jobDescription}
 
 Resume:
 ${resumeText}
 
-Respond ONLY in this strict JSON format:
+Expected Output Format:
 {
-  "matched_roles": [ ... ],
-  "skills_found": [ ... ],
-  "missing_keywords": [ ... ],
+  "name": "...",
+  "email": "...",
+  "matched_roles": [...],
+  "skills_found": [...],
+  "missing_keywords": [...],
   "summary": "...",
   "recommendations": "..."
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const text =  result.response.text();
 
-    const json = JSON.parse(text); // might need to sanitize if Gemini adds extra text
-    return NextResponse.json(json);
-  } catch (error) {
-    console.error("Error in /api/analyze:", error);
-    return NextResponse.json(
-      { error: "Failed to analyze resume", detail: error.message },
-      { status: 500 }
-    );
+    // const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // const result = await model.generateContent(prompt);
+
+     const result = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+    let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    // console.log(text)
+    // const text=response.text
+
+    text = text.trim()
+  .replace(/^```(?:json)?\n?/i, '')  // remove starting ```
+  .replace(/\n?```$/i, ''); 
+
+    if (!text) {
+      throw new Error("AI returned no content");
+    }
+
+//     const parsed = JSON.parse(text);
+//  const newResult = await AnalysisResult.create(parsed);
+//     // return NextResponse.json(text);
+//     return NextResponse.json({ id: newResult._id });
+
+const parsed = JSON.parse(text);
+
+const total = parsed.skills_found.length + parsed.missing_keywords.length;
+const matchPercent = total ? Math.round((parsed.skills_found.length / total) * 100) : 0;
+
+const newResult = await AnalysisResult.create(parsed);
+
+return NextResponse.json({ id: newResult._id, matchPercent });
+
+  } catch (err) {
+    console.error("❌ Error in /api/analyze:", err);
+    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
   }
 }
+
+
