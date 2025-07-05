@@ -7,11 +7,11 @@ import { GoogleGenAI } from "@google/genai";
 
 import { dbConnect } from "@/lib/dbConnect";
 import AnalysisResult from "@/models/AnalysisResult";
-
+console.log(process.env.MONGODB_URI)
 
 export async function POST(req) {
+  await dbConnect();
   try {
-    await dbConnect();
     const formData = await req.formData();
     const file = formData.get("resume");
     const jobDescription = formData.get("job_description");
