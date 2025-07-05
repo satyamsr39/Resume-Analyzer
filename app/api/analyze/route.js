@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { extractTextFromFile } from "@/lib/parseResume";
 import fs from "fs/promises";
 import path from "path";
