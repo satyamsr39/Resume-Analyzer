@@ -5,8 +5,6 @@ import mongoose from "mongoose";
 
 
 
-
-
 export default async function ResultPage({ params }) {
   const { id } = await params;
 
