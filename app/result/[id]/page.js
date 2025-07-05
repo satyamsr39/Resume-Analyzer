@@ -37,6 +37,8 @@ export default async function ResultPage({ params }) {
   }
 
   const {
+    name="",
+    email="",
     matched_roles = [],
     skills_found = [],
     missing_keywords = [],
