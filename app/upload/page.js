@@ -85,6 +85,7 @@ export default function UploadPage() {
         </button>
       </form>
 
+
       {results.length > 0 && (
         <div className="grid md:grid-cols-2 gap-4 mt-8">
           {results.map((res, idx) => (
@@ -108,10 +109,14 @@ export default function UploadPage() {
                   </a>
                 </>
               )}
+              
             </div>
           ))}
+          
         </div>
+        
       )}
+      
     </div>
   );
 }

@@ -10,6 +10,7 @@ export default function Navbar() {
     { href: "/", label: "Home" },
     { href: "/upload", label: "Upload Resume" },
     { href: "/all-results", label: "Analyzed Resumes" },
+    { href: "/AboutUs", label: "About Us" },
   ];
 
   return (
