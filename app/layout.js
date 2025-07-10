@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
     <body className="bg-gray-50 text-gray-800">
       <Navbar/>
        <main className="max-w-5xl mx-auto p-4">{children}</main>
-       {/* <Analytics/>  */}
+       <Analytics/> 
       
       </body>
     </html>
