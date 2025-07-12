@@ -113,34 +113,7 @@ export default function UploadPage() {
         </div>
       )}
 
-      {/* Why IntelliHire Section */}
-      <div className="mt-16 bg-gray-50 border border-gray-200 p-6 rounded">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 text-center">
-          Why Use IntelliHire?
-        </h2>
-        <div className="grid md:grid-cols-2 gap-6 text-gray-700 text-sm">
-          <div>
-            <h3 className="font-semibold mb-2 text-gray-900">For Recruiters</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Analyze multiple resumes in one go.</li>
-              <li>Instantly see how well candidates align with your job requirements.</li>
-              <li>Eliminate manual screening and reduce hiring time.</li>
-              <li>Easily identify top profiles with skill-match scores.</li>
-              <li>Structured, clear reports make evaluation easier.</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2 text-gray-900">For Candidates</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Get immediate feedback on how well your resume fits the role.</li>
-              <li>Identify missing keywords and skills to improve your profile.</li>
-              <li>Boost your chances by optimizing based on AI suggestions.</li>
-              <li>Make your applications more targeted and effective.</li>
-              <li>Stand out in competitive hiring pipelines.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+     
     </div>
   );
 }
