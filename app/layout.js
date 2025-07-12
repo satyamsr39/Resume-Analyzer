@@ -9,6 +9,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <title>IntelliHire- AI Powered Resume Analyzer</title>
+          <link rel='icon' href='/favicon.png' sizes='32x32'/>
 
       </head>
     <body className="bg-gray-50 text-gray-800">
